@@ -1,6 +1,7 @@
 package org.openstreetmap.josm.plugins.apolloopendrive;
 
 import java.io.InputStream;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,6 +17,7 @@ import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.io.AbstractReader;
 import org.openstreetmap.josm.io.IllegalDataException;
 import org.openstreetmap.josm.plugins.apolloopendrive.xml.OpenDRIVE;
+import org.openstreetmap.josm.plugins.apolloopendrive.xml.OpenDRIVE.Junction;
 import org.openstreetmap.josm.plugins.apolloopendrive.xml.OpenDRIVE.Road;
 
 import sun.util.logging.resources.logging;
@@ -38,6 +40,17 @@ public class ApolloOpenDriveReader extends AbstractReader {
 				Object item = data.getLinkOrGeometryOrOutline().get(i);
 				progressMonitor.setTicks(i);
 				Class<? extends Object> className = item.getClass();
+				if (className==org.openstreetmap.josm.plugins.apolloopendrive.xml.OpenDRIVE.Junction.class) {
+					Junction junction = (Junction)item;
+					junction.getOutline().forEach(outline->{
+						String id = junction.getId();
+						Way way = createWay();
+						setJunctionWayTags(way, id);
+						outline.getCornerGlobal().forEach(cornerGlobal->{
+							Node node = createNode(Double.parseDouble(cornerGlobal.getY()), Double.parseDouble(cornerGlobal.getX()), way);
+						});
+					});
+				}
 				if (className==org.openstreetmap.josm.plugins.apolloopendrive.xml.OpenDRIVE.Road.class) {
 					Road road = (Road)item;
 					road.getObjects().forEach(object->{
@@ -180,6 +193,12 @@ public class ApolloOpenDriveReader extends AbstractReader {
 		map.put("lane", lane);
 		
 		node.setKeys(map);
+	}
+	
+	private void setJunctionWayTags(Way way, String uid) {
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("uid", uid);
+		way.setKeys(map);
 	}
 	
 	private void setWayTags(Way way, String uid, String lane, String order, String type, String singleSide, String road) {
