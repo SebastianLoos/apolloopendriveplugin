@@ -57,14 +57,14 @@ public class ApolloOpenDriveReader extends AbstractReader {
 						object.getObject().forEach(singleObject->{
 							singleObject.getOutline().forEach(outline->{
 								Way way = createWay();
-								setWayTags(way, singleObject.getId(), "outline", "0", singleObject.getType(), "false", road.getId());
+								setWayTags(way, singleObject.getId(), "outline", "0", singleObject.getType(), "false", road.getId(), "objectOutline");
 								outline.getCornerGlobal().forEach(cornerGlobal ->{
 									Node node = createNode(Double.parseDouble(cornerGlobal.getY()), Double.parseDouble(cornerGlobal.getX()), way);
 								});
 							});
 							singleObject.getGeometry().forEach(geometry->{
 								Way way = createWay();
-								setWayTags(way, singleObject.getId(), "all", "0", singleObject.getType(), "false", road.getId());
+								setWayTags(way, singleObject.getId(), "all", "0", singleObject.getType(), "false", road.getId(), "objectGeometry");
 								geometry.getPointSet().forEach(pointSet ->{
 									pointSet.getPoint().forEach(point->{
 										Node node = createNode(Double.parseDouble(point.getY()), Double.parseDouble(point.getX()), way);
@@ -80,7 +80,7 @@ public class ApolloOpenDriveReader extends AbstractReader {
 									boundary2.getGeometry().forEach(geometry->{
 										geometry.getPointSet().forEach(pointSet->{
 											Way way = createWay();
-											setWayTags(way, "-1" , "boundary", "0", boundary2.getType(), laneSection.getSingleSide(), road.getId());
+											setWayTags(way, "-1" , "boundary", "0", boundary2.getType(), laneSection.getSingleSide(), road.getId(), "boundary");
 											pointSet.getPoint().forEach(point->{
 												Node node = createNode(Double.parseDouble(point.getY()), Double.parseDouble(point.getX()), way);
 												//System.out.println(point.getY()+" "+point.getX());
@@ -97,7 +97,7 @@ public class ApolloOpenDriveReader extends AbstractReader {
 											setGeometryNodeTags(geometryNode, road.getId(), lane2.getId());
 											geometry.getPointSet().forEach(pointSet->{
 												Way way = createWay();
-												setWayTags(way, lane2.getUid(), "center", lane2.getId(), "border", laneSection.getSingleSide(), road.getId());
+												setWayTags(way, lane2.getUid(), "center", lane2.getId(), "centerLane", laneSection.getSingleSide(), road.getId(), lane2.getDirection());
 												pointSet.getPoint().forEach(point->{
 													Node node = createNode(Double.parseDouble(point.getY()), Double.parseDouble(point.getX()), way);
 													//System.out.println(point.getY()+" "+point.getX());
@@ -115,7 +115,7 @@ public class ApolloOpenDriveReader extends AbstractReader {
 											setGeometryNodeTags(geometryNode, road.getId(), lane2.getId());
 											geometry.getPointSet().forEach(pointSet->{
 												Way way = createWay();
-												setWayTags(way, lane2.getUid(), "right", lane2.getId(), "border", laneSection.getSingleSide(), road.getId());
+												setWayTags(way, lane2.getUid(), "right", lane2.getId(), "border", laneSection.getSingleSide(), road.getId(), lane2.getDirection());
 												pointSet.getPoint().forEach(point->{
 													Node node = createNode(Double.parseDouble(point.getY()), Double.parseDouble(point.getX()), way);
 													//System.out.println(point.getY()+" "+point.getX());
@@ -129,7 +129,7 @@ public class ApolloOpenDriveReader extends AbstractReader {
 											setGeometryNodeTags(geometryNode, road.getId(), lane2.getId());
 											geometry.getPointSet().forEach(pointSet->{
 												Way way = createWay();
-												setWayTags(way, lane2.getUid(), "right", lane2.getId(), "center", laneSection.getSingleSide(), road.getId());
+												setWayTags(way, lane2.getUid(), "right", lane2.getId(), "center", laneSection.getSingleSide(), road.getId(), lane2.getDirection());
 												pointSet.getPoint().forEach(point->{
 													Node node = createNode(Double.parseDouble(point.getY()), Double.parseDouble(point.getX()), way);
 													//System.out.println(point.getY()+" "+point.getX());
@@ -145,7 +145,7 @@ public class ApolloOpenDriveReader extends AbstractReader {
 						signals.getSignal().forEach(signal->{
 							signal.getOutline().forEach(outline->{
 								Way way = createWay();
-								setWayTags(way, signal.getId(), "outline", "0", signal.getType(), "false", road.getId());
+								setWayTags(way, signal.getId(), "outline", "0", signal.getType(), "false", road.getId(), "signal");
 								outline.getCornerGlobal().forEach(cornerGlobal ->{
 									Node node = createNode(Double.parseDouble(cornerGlobal.getY()), Double.parseDouble(cornerGlobal.getX()), way);
 								});
@@ -198,17 +198,19 @@ public class ApolloOpenDriveReader extends AbstractReader {
 	private void setJunctionWayTags(Way way, String uid) {
 		Map<String, String> map = new HashMap<String, String>();
 		map.put("uid", uid);
+		map.put("xodr:type", "junctionArea");
 		way.setKeys(map);
 	}
 	
-	private void setWayTags(Way way, String uid, String lane, String order, String type, String singleSide, String road) {
+	private void setWayTags(Way way, String uid, String lane, String order, String type, String singleSide, String road, String direction) {
 		Map<String, String> map = new HashMap<String, String>();
 		map.put("uid", uid);
 		map.put("lane", lane);
 		map.put("order", order);
-		map.put("type", type);
+		map.put("xodr:type", type);
 		map.put("oneway", singleSide);
 		map.put("road", road);
+		map.put("direction", direction != null ? direction : "null");
 		System.out.println(way.getId());
 		System.out.println(uid);
 		System.out.println(lane);
