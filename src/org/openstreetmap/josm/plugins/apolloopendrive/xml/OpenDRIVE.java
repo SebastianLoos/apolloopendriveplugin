@@ -2152,6 +2152,8 @@ public class OpenDRIVE {
                 protected String id;
                 @XmlAttribute(name = "type")
                 protected String type;
+                @XmlAttribute(name = "subtype")
+                protected String subtype;
 
                 /**
                  * Gets the value of the geometry property.
@@ -2257,6 +2259,30 @@ public class OpenDRIVE {
                  */
                 public void setType(String value) {
                     this.type = value;
+                }
+                
+                /**
+                 * Ruft den Wert der subtype-Eigenschaft ab.
+                 * 
+                 * @return
+                 *     possible object is
+                 *     {@link String }
+                 *     
+                 */
+                public String getSubtype() {
+                    return subtype;
+                }
+
+                /**
+                 * Legt den Wert der subtype-Eigenschaft fest.
+                 * 
+                 * @param value
+                 *     allowed object is
+                 *     {@link String }
+                 *     
+                 */
+                public void setSubtype(String value) {
+                    this.subtype = value;
                 }
 
             }
