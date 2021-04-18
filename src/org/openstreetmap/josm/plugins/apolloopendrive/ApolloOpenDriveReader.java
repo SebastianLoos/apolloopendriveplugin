@@ -105,7 +105,7 @@ public class ApolloOpenDriveReader extends AbstractReader {
 										border.getGeometry().forEach(geometry->{
 											geometry.getPointSet().forEach(pointSet->{
 												Way way = createWay();
-												setGeometryWayTags(way, "-1", geometry.getSOffset(), geometry.getX(), geometry.getY(), geometry.getZ(), geometry.getLength(), "border");
+												setGeometryWayTags(way, "-1", geometry.getSOffset(), geometry.getX(), geometry.getY(), geometry.getZ(), geometry.getLength(), "centerLane");
 												borderRelation.addMember(new RelationMember("xodr:geometry", way));
 												pointSet.getPoint().forEach(point->{
 													Node node = createNode(Double.parseDouble(point.getY()), Double.parseDouble(point.getX()), way);
