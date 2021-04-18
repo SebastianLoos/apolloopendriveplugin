@@ -287,7 +287,7 @@ public class ApolloOpenDriveReader extends AbstractReader {
 	private void setJunctionWayTags(Way way, String uid) {
 		Map<String, String> map = new HashMap<String, String>();
 		map.put("uid", uid);
-		map.put("xodr:type", "junctionArea");
+		map.put("xodr:element", "junctionArea");
 		way.setKeys(map);
 	}
 	
