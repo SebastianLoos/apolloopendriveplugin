@@ -99,6 +99,7 @@ public class ApolloOpenDriveReader extends AbstractReader {
 							laneSection.getCenter().forEach(center->{
 								center.getLane().forEach(lane2->{
 									Relation laneRelation = createRelation("xodr:centerlane");
+									laneSectionRelation.addMember(new RelationMember("xodr:centerlane", laneRelation));
 									lane2.getBorder().forEach(border->{
 										Relation borderRelation = createRelation("xodr:border");
 										laneRelation.addMember(new RelationMember("xodr:border", borderRelation));
@@ -118,6 +119,39 @@ public class ApolloOpenDriveReader extends AbstractReader {
 							laneSection.getRight().forEach(right->{
 								right.getLane().forEach(lane2->{
 									Relation laneRelation = createRelation("xodr:rightlane");
+									laneSectionRelation.addMember(new RelationMember("xodr:rightlane", laneRelation));
+									lane2.getBorder().forEach(border->{
+										Relation borderRelation = createRelation("xodr:border");
+										laneRelation.addMember(new RelationMember("xodr:border", borderRelation));
+										border.getGeometry().forEach(geometry->{
+											geometry.getPointSet().forEach(pointSet->{
+												Way way = createWay();
+												setGeometryWayTags(way, "-1", geometry.getSOffset(), geometry.getX(), geometry.getY(), geometry.getZ(), geometry.getLength(), "border");
+												borderRelation.addMember(new RelationMember("xodr:geometry", way));
+												pointSet.getPoint().forEach(point->{
+													Node node = createNode(Double.parseDouble(point.getY()), Double.parseDouble(point.getX()), way);
+												});
+											});
+										});
+									});
+									lane2.getCenterLine().forEach(center->{
+										center.getGeometry().forEach(geometry->{
+											geometry.getPointSet().forEach(pointSet->{
+												Way way = createWay();
+												setGeometryWayTags(way, "-1", geometry.getSOffset(), geometry.getX(), geometry.getY(), geometry.getZ(), geometry.getLength(), "centerLine");
+												laneRelation.addMember(new RelationMember("xodr:centerline", way));
+												pointSet.getPoint().forEach(point->{
+													Node node = createNode(Double.parseDouble(point.getY()), Double.parseDouble(point.getX()), way);
+												});
+											});
+										});
+									});
+								});
+							});
+							laneSection.getLeft().forEach(left->{
+								left.getLane().forEach(lane2->{
+									Relation laneRelation = createRelation("xodr:leftlane");
+									laneSectionRelation.addMember(new RelationMember("xodr:leftlane", laneRelation));
 									lane2.getBorder().forEach(border->{
 										Relation borderRelation = createRelation("xodr:border");
 										laneRelation.addMember(new RelationMember("xodr:border", borderRelation));
