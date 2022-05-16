@@ -1,4 +1,6 @@
-package org.openstreetmap.josm.plugins.apolloopendrive;
+package org.openstreetmap.josm.plugins.apolloopendrive.toosm;
+
+import static org.openstreetmap.josm.tools.I18n.tr;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,8 +8,6 @@ import java.io.InputStream;
 import java.util.Arrays;
 
 import javax.swing.JOptionPane;
-
-import static org.openstreetmap.josm.tools.I18n.tr;
 
 import org.openstreetmap.josm.actions.ExtensionFileFilter;
 import org.openstreetmap.josm.data.osm.DataSet;
@@ -22,23 +22,23 @@ import org.openstreetmap.josm.io.Compression;
 import org.openstreetmap.josm.io.IllegalDataException;
 import org.openstreetmap.josm.tools.Logging;
 
-public class ApolloOpenDriveFileImporter extends FileImporter {
-
+public class ApolloOpenDriveToOsmFileImporter extends FileImporter{
+	
 	private static final ExtensionFileFilter FILE_FILTER = ExtensionFileFilter.newFilterWithArchiveExtensions(
-	        "xodr,xml", "xodr", tr("Apollo OpenDrive file") + " (*.xodr, *.xml)",
+	        "xodr,xml", "xodr", tr("Apollo OpenDrive file for OSM Upload") + " (*.xodr, *.xml)",
 	        ExtensionFileFilter.AddArchiveExtension.NONE, Arrays.asList("gz", "bz", "bz2", "xz", "zip"));
 
-	public ApolloOpenDriveFileImporter() {
+	public ApolloOpenDriveToOsmFileImporter() {
 		super(FILE_FILTER);
 	}
 	
 	@Override
 	public void importData(final File file, final ProgressMonitor progressMonitor) {
-		progressMonitor.beginTask(tr("Loading Apollo OpenDrive file..."));
+		progressMonitor.beginTask(tr("Loading Apollo OpenDrive file for OSM upload..."));
 		progressMonitor.setTicksCount(2);
 		Logging.info("Parsing ApolloOpenDrive: {0}", file.getAbsolutePath());
         try (InputStream fileInputStream = Compression.getUncompressedFileInputStream(file)) {
-            DataSet data = new ApolloOpenDriveReader().doParseDataSet(fileInputStream, progressMonitor);
+            DataSet data = new ApolloOpenDriveToOsmReader().doParseDataSet(fileInputStream, progressMonitor);
             progressMonitor.worked(1);
             MainApplication.getLayerManager().addLayer(new OsmDataLayer(data, file.getName(), file));
         } catch (final Exception e) {
@@ -54,7 +54,7 @@ public class ApolloOpenDriveFileImporter extends FileImporter {
 	public DataSet parseDataSet(final String source) throws IOException, IllegalDataException {
         try (CachedFile cf = new CachedFile(source)) {
             InputStream fileInputStream = Compression.getUncompressedFileInputStream(cf.getFile());
-            return ApolloOpenDriveReader.parseDataSet(fileInputStream, NullProgressMonitor.INSTANCE);
+            return ApolloOpenDriveToOsmReader.parseDataSet(fileInputStream, NullProgressMonitor.INSTANCE);
         }
     }
 }

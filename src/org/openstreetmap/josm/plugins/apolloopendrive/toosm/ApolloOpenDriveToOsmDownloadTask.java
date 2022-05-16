@@ -1,4 +1,9 @@
-package org.openstreetmap.josm.plugins.apolloopendrive;
+package org.openstreetmap.josm.plugins.apolloopendrive.toosm;
+
+import static org.openstreetmap.josm.tools.I18n.tr;
+
+import java.util.Optional;
+import java.util.concurrent.Future;
 
 import org.openstreetmap.josm.actions.downloadtasks.DownloadOsmTask;
 import org.openstreetmap.josm.actions.downloadtasks.DownloadParams;
@@ -9,12 +14,7 @@ import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.tools.Utils;
 
-import java.util.Optional;
-import java.util.concurrent.Future;
-
-import static org.openstreetmap.josm.tools.I18n.tr;
-
-public class ApolloOpenDriveDownloadTask extends DownloadOsmTask {
+public class ApolloOpenDriveToOsmDownloadTask extends DownloadOsmTask{
 	private static final String PATTERN_COMPRESS = "https?://.*/(.*\\.(xodr|xml)(\\.(gz|xz|bz2?|zip))?)";
 
     @Override
@@ -43,7 +43,7 @@ public class ApolloOpenDriveDownloadTask extends DownloadOsmTask {
         private final String url;
 
         InternalDownloadTask(DownloadParams settings, String url, ProgressMonitor progressMonitor) {
-            super(settings, new ApolloOpenDriveServerReader(url), progressMonitor);
+            super(settings, new ApolloOpenDriveToOsmServerReader(url), progressMonitor);
             this.url = url;
         }
 

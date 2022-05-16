@@ -27,7 +27,7 @@
     <property name="plugin.icon" value="..."/>
     <property name="plugin.link" value="test"/>
     <!--<property name="plugin.early" value="..."/>-->
-    <property name="plugin.requires" value="jaxb"/>
+    <property name="plugin.requires" value="jaxb,jts,jackson"/>
     <!--<property name="plugin.stage" value="..."/>-->
 
     <fileset id="plugin.requires.jars" dir="${plugin.dist.dir}">

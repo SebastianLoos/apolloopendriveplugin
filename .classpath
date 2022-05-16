@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="C:/Users/Hayuki/Downloads/josm/core/dist/josm-custom.jar">
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
 		<attributes>
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk1.8.0_211"/>
+	<classpathentry kind="lib" path="C:/Users/Hayuki/OneDrive/Masterarbeit/josm-tested.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Hayuki/Documents/apolloconverterlib-ex-0.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Hayuki/OneDrive/Masterarbeit/jaxb.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

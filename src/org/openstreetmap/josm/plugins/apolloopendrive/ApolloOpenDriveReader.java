@@ -4,6 +4,8 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+
+
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -22,7 +24,38 @@ import org.openstreetmap.josm.plugins.apolloopendrive.xml.OpenDRIVE.Junction;
 import org.openstreetmap.josm.plugins.apolloopendrive.xml.OpenDRIVE.Road;
 
 public class ApolloOpenDriveReader extends AbstractReader {
+	
+	/**
+	 * Parses the given input stream for OpenDRIVE data and populates the data set of a new reader instance with the data.
+	 * @param input Input stream containing the OpenDRIVE data.
+	 * @param progressMonitor Progress monitor to report progress to.
+	 * @return The data set containing the OpenDRIVE data for display in JOSM.
+	 * @throws IllegalDataException
+	 */
+	public static DataSet parseDataSet(InputStream input, ProgressMonitor progressMonitor) throws IllegalDataException {
+		return new ApolloOpenDriveReader().doParseDataSet(input, progressMonitor);
+	}
+	
+	/**
+	 * Parses the given input stream for OpenDRIVE data and populates the data set of the current reader instance with the data.
+	 */
+	@Override
+	protected DataSet doParseDataSet(InputStream input, ProgressMonitor progressMonitor) throws IllegalDataException {
+		try {
+			OpenDRIVE data = readOpenDriveData(input);
+			populateDataSet(data, progressMonitor);
+		} catch (JAXBException e) {
+			e.printStackTrace();
+		}
+		return getDataSet();
+	}
 
+	/**
+	 * Reads the input stream and deserializes the stream into an OpenDRIVE object.
+	 * @param input The input stream to deserialize.
+	 * @return The deserialized OpenDRIVE data.
+	 * @throws JAXBException
+	 */
 	private OpenDRIVE readOpenDriveData(InputStream input) throws JAXBException {
 		JAXBContext jaxbContext = JAXBContext.newInstance(OpenDRIVE.class);
 		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
@@ -31,64 +64,88 @@ public class ApolloOpenDriveReader extends AbstractReader {
 		return data;
 	}
 	
-	private void parse(InputStream input, ProgressMonitor progressMonitor) {
-		try {
-			OpenDRIVE data = readOpenDriveData(input);
-			progressMonitor.setTicksCount(data.getLinkOrGeometryOrOutline().size());
-			for (int i = 0; i< data.getLinkOrGeometryOrOutline().size(); i++) {
-				Object item = data.getLinkOrGeometryOrOutline().get(i);
-				progressMonitor.setTicks(i);
-				Class<? extends Object> className = item.getClass();
-				if (className==org.openstreetmap.josm.plugins.apolloopendrive.xml.OpenDRIVE.Junction.class) {
-					Junction junction = (Junction)item;
-					junction.getOutline().forEach(outline->{
-						String id = junction.getId();
-						Way way = createWay();
-						setJunctionWayTags(way, id);
-						outline.getCornerGlobal().forEach(cornerGlobal->{
-							Node node = createNode(Double.parseDouble(cornerGlobal.getY()), Double.parseDouble(cornerGlobal.getX()), way);
-						});
+	/**
+	 * Populates the data set of the current reader with data parsed from an OpenDRIVE file.
+	 * @param data Data from an OpenDRIVE file.
+	 * @param progressMonitor Progress monitor to report the current progress to.
+	 */
+	private void populateDataSet(OpenDRIVE data, ProgressMonitor progressMonitor) {
+		progressMonitor.setTicksCount(data.getLinkOrGeometryOrOutline().size());
+		for (int i = 0; i< data.getLinkOrGeometryOrOutline().size(); i++) {
+			Object item = data.getLinkOrGeometryOrOutline().get(i);
+			progressMonitor.setTicks(i);
+			Class<? extends Object> className = item.getClass();
+			if (className==org.openstreetmap.josm.plugins.apolloopendrive.xml.OpenDRIVE.Junction.class) {
+				Junction junction = (Junction)item;
+				junction.getOutline().forEach(outline->{
+					String id = junction.getId();
+					Way way = createWay();
+					setJunctionWayTags(way, id);
+					outline.getCornerGlobal().forEach(cornerGlobal->{
+						Node node = createNode(Double.parseDouble(cornerGlobal.getY()), Double.parseDouble(cornerGlobal.getX()), way);
 					});
-				}
-				if (className==org.openstreetmap.josm.plugins.apolloopendrive.xml.OpenDRIVE.Road.class) {
-					Road road = (Road)item;
-					Relation roadRelation = createRelation("xodr:road");
-					road.getObjects().forEach(object->{
-						object.getObject().forEach(singleObject->{
-							Relation objectRelation = createRelation("xodr:object");
-							roadRelation.addMember(new RelationMember("xodr:object", objectRelation));
-							setObjectRelationTags(objectRelation, "-1", singleObject.getId(), singleObject.getType(), singleObject.getSubtype());
-							singleObject.getOutline().forEach(outline->{
-								Way way = createWay();
-								objectRelation.addMember(new RelationMember("xodr:outline", way));
-								outline.getCornerGlobal().forEach(cornerGlobal ->{
-									Node node = createNode(Double.parseDouble(cornerGlobal.getY()), Double.parseDouble(cornerGlobal.getX()), way);
+				});
+			}
+			if (className==org.openstreetmap.josm.plugins.apolloopendrive.xml.OpenDRIVE.Road.class) {
+				Road road = (Road)item;
+				Relation roadRelation = createRelation("xodr:road");
+				setRoadTags(roadRelation, "-1", road.getId());
+				road.getObjects().forEach(object->{
+					object.getObject().forEach(singleObject->{
+						Relation objectRelation = createRelation("xodr:object");
+						roadRelation.addMember(new RelationMember("xodr:object", objectRelation));
+						setObjectRelationTags(objectRelation, "-1", singleObject.getId(), singleObject.getType(), singleObject.getSubtype());
+						singleObject.getOutline().forEach(outline->{
+							Way way = createWay();
+							objectRelation.addMember(new RelationMember("xodr:outline", way));
+							outline.getCornerGlobal().forEach(cornerGlobal ->{
+								Node node = createNode(Double.parseDouble(cornerGlobal.getY()), Double.parseDouble(cornerGlobal.getX()), way);
+							});
+						});
+						singleObject.getGeometry().forEach(geometry->{
+							Way way = createWay();
+							objectRelation.addMember(new RelationMember("xodr:geometry", way));
+							geometry.getPointSet().forEach(pointSet ->{
+								pointSet.getPoint().forEach(point->{
+									Node node = createNode(Double.parseDouble(point.getY()), Double.parseDouble(point.getX()), way);
 								});
 							});
-							singleObject.getGeometry().forEach(geometry->{
-								Way way = createWay();
-								objectRelation.addMember(new RelationMember("xodr:geometry", way));
-								geometry.getPointSet().forEach(pointSet ->{
-									pointSet.getPoint().forEach(point->{
-										Node node = createNode(Double.parseDouble(point.getY()), Double.parseDouble(point.getX()), way);
+						});
+					});
+				});
+				road.getLanes().forEach(lane->{
+					lane.getLaneSection().forEach(laneSection->{
+						Relation laneSectionRelation = createRelation("xodr:lanesection");
+						roadRelation.addMember(new RelationMember("xodr:lanesection", laneSectionRelation));
+						laneSection.getBoundaries().forEach(boundary->{
+							boundary.getBoundary().forEach(boundary2->{
+								Relation boundaryRelation = createRelation("xodr:boundary");
+								laneSectionRelation.addMember(new RelationMember("xodr:boundary", boundaryRelation));
+								boundary2.getGeometry().forEach(geometry->{
+									geometry.getPointSet().forEach(pointSet->{
+										Way way = createWay();
+										setBoundaryWayTags(way, road.getId(), boundary2.getType());
+										boundaryRelation.addMember(new RelationMember("xodr:geometry", way));
+										pointSet.getPoint().forEach(point->{
+											Node node = createNode(Double.parseDouble(point.getY()), Double.parseDouble(point.getX()), way);
+										});
 									});
 								});
 							});
 						});
-					});
-					road.getLanes().forEach(lane->{
-						lane.getLaneSection().forEach(laneSection->{
-							Relation laneSectionRelation = createRelation("xodr:lanesection");
-							roadRelation.addMember(new RelationMember("xodr:lanesection", laneSectionRelation));
-							laneSection.getBoundaries().forEach(boundary->{
-								boundary.getBoundary().forEach(boundary2->{
-									Relation boundaryRelation = createRelation("xodr:boundary");
-									laneSectionRelation.addMember(new RelationMember("xodr:boundary", boundaryRelation));
-									boundary2.getGeometry().forEach(geometry->{
+						laneSection.getCenter().forEach(center->{
+							center.getLane().forEach(lane2->{
+								Relation laneRelation = createRelation("xodr:centerlane");
+								setLaneRelationTags(laneRelation, lane2.getId(), lane2.getUid(), "center");
+								laneSectionRelation.addMember(new RelationMember("xodr:centerlane", laneRelation));
+								lane2.getBorder().forEach(border->{
+									Relation borderRelation = createRelation("xodr:border");
+									laneRelation.addMember(new RelationMember("xodr:border", borderRelation));
+									border.getGeometry().forEach(geometry->{
 										geometry.getPointSet().forEach(pointSet->{
 											Way way = createWay();
-											setBoundaryWayTags(way, "-1", boundary2.getType());
-											boundaryRelation.addMember(new RelationMember("xodr:geometry", way));
+											setGeometryWayTags(way, road.getId(), geometry.getSOffset(), geometry.getX(), geometry.getY(), geometry.getZ(), geometry.getLength(), "centerLane");
+											borderRelation.addMember(new RelationMember("xodr:geometry", way));
 											pointSet.getPoint().forEach(point->{
 												Node node = createNode(Double.parseDouble(point.getY()), Double.parseDouble(point.getX()), way);
 											});
@@ -96,85 +153,67 @@ public class ApolloOpenDriveReader extends AbstractReader {
 									});
 								});
 							});
-							laneSection.getCenter().forEach(center->{
-								center.getLane().forEach(lane2->{
-									Relation laneRelation = createRelation("xodr:centerlane");
-									laneSectionRelation.addMember(new RelationMember("xodr:centerlane", laneRelation));
-									lane2.getBorder().forEach(border->{
-										Relation borderRelation = createRelation("xodr:border");
-										laneRelation.addMember(new RelationMember("xodr:border", borderRelation));
-										border.getGeometry().forEach(geometry->{
-											geometry.getPointSet().forEach(pointSet->{
-												Way way = createWay();
-												setGeometryWayTags(way, "-1", geometry.getSOffset(), geometry.getX(), geometry.getY(), geometry.getZ(), geometry.getLength(), "centerLane");
-												borderRelation.addMember(new RelationMember("xodr:geometry", way));
-												pointSet.getPoint().forEach(point->{
-													Node node = createNode(Double.parseDouble(point.getY()), Double.parseDouble(point.getX()), way);
-												});
+						});
+						laneSection.getRight().forEach(right->{
+							right.getLane().forEach(lane2->{
+								Relation laneRelation = createRelation("xodr:rightlane");
+								setLaneRelationTags(laneRelation, lane2.getId(), lane2.getUid(), lane2.getType());
+								laneSectionRelation.addMember(new RelationMember("xodr:rightlane", laneRelation));
+								lane2.getBorder().forEach(border->{
+									Relation borderRelation = createRelation("xodr:border");
+									laneRelation.addMember(new RelationMember("xodr:border", borderRelation));
+									border.getGeometry().forEach(geometry->{
+										geometry.getPointSet().forEach(pointSet->{
+											Way way = createWay();
+											setGeometryWayTags(way, "-1", geometry.getSOffset(), geometry.getX(), geometry.getY(), geometry.getZ(), lane2.getDirection(), "border");
+											borderRelation.addMember(new RelationMember("xodr:geometry", way));
+											pointSet.getPoint().forEach(point->{
+												Node node = createNode(Double.parseDouble(point.getY()), Double.parseDouble(point.getX()), way);
+											});
+										});
+									});
+								});
+								lane2.getCenterLine().forEach(center->{
+									center.getGeometry().forEach(geometry->{
+										geometry.getPointSet().forEach(pointSet->{
+											Way way = createWay();
+											setGeometryWayTags(way, "-1", geometry.getSOffset(), geometry.getX(), geometry.getY(), geometry.getZ(), geometry.getLength(), "centerLine");
+											laneRelation.addMember(new RelationMember("xodr:centerline", way));
+											pointSet.getPoint().forEach(point->{
+												Node node = createNode(Double.parseDouble(point.getY()), Double.parseDouble(point.getX()), way);
 											});
 										});
 									});
 								});
 							});
-							laneSection.getRight().forEach(right->{
-								right.getLane().forEach(lane2->{
-									Relation laneRelation = createRelation("xodr:rightlane");
-									laneSectionRelation.addMember(new RelationMember("xodr:rightlane", laneRelation));
-									lane2.getBorder().forEach(border->{
-										Relation borderRelation = createRelation("xodr:border");
-										laneRelation.addMember(new RelationMember("xodr:border", borderRelation));
-										border.getGeometry().forEach(geometry->{
-											geometry.getPointSet().forEach(pointSet->{
-												Way way = createWay();
-												setGeometryWayTags(way, "-1", geometry.getSOffset(), geometry.getX(), geometry.getY(), geometry.getZ(), lane2.getDirection(), "border");
-												borderRelation.addMember(new RelationMember("xodr:geometry", way));
-												pointSet.getPoint().forEach(point->{
-													Node node = createNode(Double.parseDouble(point.getY()), Double.parseDouble(point.getX()), way);
-												});
-											});
-										});
-									});
-									lane2.getCenterLine().forEach(center->{
-										center.getGeometry().forEach(geometry->{
-											geometry.getPointSet().forEach(pointSet->{
-												Way way = createWay();
-												setGeometryWayTags(way, "-1", geometry.getSOffset(), geometry.getX(), geometry.getY(), geometry.getZ(), geometry.getLength(), "centerLine");
-												laneRelation.addMember(new RelationMember("xodr:centerline", way));
-												pointSet.getPoint().forEach(point->{
-													Node node = createNode(Double.parseDouble(point.getY()), Double.parseDouble(point.getX()), way);
-												});
+						});
+						laneSection.getLeft().forEach(left->{
+							left.getLane().forEach(lane2->{
+								Relation laneRelation = createRelation("xodr:leftlane");
+								setLaneRelationTags(laneRelation, lane2.getId(), lane2.getUid(), lane2.getType());
+								laneSectionRelation.addMember(new RelationMember("xodr:leftlane", laneRelation));
+								lane2.getBorder().forEach(border->{
+									Relation borderRelation = createRelation("xodr:border");
+									laneRelation.addMember(new RelationMember("xodr:border", borderRelation));
+									border.getGeometry().forEach(geometry->{
+										geometry.getPointSet().forEach(pointSet->{
+											Way way = createWay();
+											setGeometryWayTags(way, "-1", geometry.getSOffset(), geometry.getX(), geometry.getY(), geometry.getZ(), lane2.getDirection(), "border");
+											borderRelation.addMember(new RelationMember("xodr:geometry", way));
+											pointSet.getPoint().forEach(point->{
+												Node node = createNode(Double.parseDouble(point.getY()), Double.parseDouble(point.getX()), way);
 											});
 										});
 									});
 								});
-							});
-							laneSection.getLeft().forEach(left->{
-								left.getLane().forEach(lane2->{
-									Relation laneRelation = createRelation("xodr:leftlane");
-									laneSectionRelation.addMember(new RelationMember("xodr:leftlane", laneRelation));
-									lane2.getBorder().forEach(border->{
-										Relation borderRelation = createRelation("xodr:border");
-										laneRelation.addMember(new RelationMember("xodr:border", borderRelation));
-										border.getGeometry().forEach(geometry->{
-											geometry.getPointSet().forEach(pointSet->{
-												Way way = createWay();
-												setGeometryWayTags(way, "-1", geometry.getSOffset(), geometry.getX(), geometry.getY(), geometry.getZ(), lane2.getDirection(), "border");
-												borderRelation.addMember(new RelationMember("xodr:geometry", way));
-												pointSet.getPoint().forEach(point->{
-													Node node = createNode(Double.parseDouble(point.getY()), Double.parseDouble(point.getX()), way);
-												});
-											});
-										});
-									});
-									lane2.getCenterLine().forEach(center->{
-										center.getGeometry().forEach(geometry->{
-											geometry.getPointSet().forEach(pointSet->{
-												Way way = createWay();
-												setGeometryWayTags(way, "-1", geometry.getSOffset(), geometry.getX(), geometry.getY(), geometry.getZ(), geometry.getLength(), "centerLine");
-												laneRelation.addMember(new RelationMember("xodr:centerline", way));
-												pointSet.getPoint().forEach(point->{
-													Node node = createNode(Double.parseDouble(point.getY()), Double.parseDouble(point.getX()), way);
-												});
+								lane2.getCenterLine().forEach(center->{
+									center.getGeometry().forEach(geometry->{
+										geometry.getPointSet().forEach(pointSet->{
+											Way way = createWay();
+											setGeometryWayTags(way, "-1", geometry.getSOffset(), geometry.getX(), geometry.getY(), geometry.getZ(), geometry.getLength(), "centerLine");
+											laneRelation.addMember(new RelationMember("xodr:centerline", way));
+											pointSet.getPoint().forEach(point->{
+												Node node = createNode(Double.parseDouble(point.getY()), Double.parseDouble(point.getX()), way);
 											});
 										});
 									});
@@ -182,31 +221,29 @@ public class ApolloOpenDriveReader extends AbstractReader {
 							});
 						});
 					});
-					road.getSignals().forEach(signals->{
-						signals.getSignal().forEach(signal->{
-							Relation signalRelation = createRelation("xodr:signal");
-							roadRelation.addMember(new RelationMember("xodr:signal", signalRelation));
-							signal.getOutline().forEach(outline->{
-								Way way = createWay();
-								signalRelation.addMember(new RelationMember("xodr:outline", way));
-								setSignalWayTags(way, "-1", signal.getId(), signal.getType(), signal.getLayoutType());
-								outline.getCornerGlobal().forEach(cornerGlobal ->{
-									Node node = createNode(Double.parseDouble(cornerGlobal.getY()), Double.parseDouble(cornerGlobal.getX()), way);
-								});
+				});
+				road.getSignals().forEach(signals->{
+					signals.getSignal().forEach(signal->{
+						Relation signalRelation = createRelation("xodr:signal");
+						roadRelation.addMember(new RelationMember("xodr:signal", signalRelation));
+						signal.getOutline().forEach(outline->{
+							Way way = createWay();
+							signalRelation.addMember(new RelationMember("xodr:outline", way));
+							setSignalWayTags(way, "-1", signal.getId(), signal.getType(), signal.getLayoutType());
+							outline.getCornerGlobal().forEach(cornerGlobal ->{
+								Node node = createNode(Double.parseDouble(cornerGlobal.getY()), Double.parseDouble(cornerGlobal.getX()), way);
 							});
-							signal.getSubSignal().forEach(subSignal->{
-								subSignal.getCenterPoint().forEach(centerPoint->{
-									Node node = createNode(Double.parseDouble(centerPoint.getY()), Double.parseDouble(centerPoint.getX()));
-									signalRelation.addMember(new RelationMember("xodr:subsignal", node));
-									setSubSignalNodeTags(node, "-1", signal.getId(), subSignal.getType());
-								});
+						});
+						signal.getSubSignal().forEach(subSignal->{
+							subSignal.getCenterPoint().forEach(centerPoint->{
+								Node node = createNode(Double.parseDouble(centerPoint.getY()), Double.parseDouble(centerPoint.getX()));
+								signalRelation.addMember(new RelationMember("xodr:subsignal", node));
+								setSubSignalNodeTags(node, "-1", signal.getId(), subSignal.getType());
 							});
 						});
 					});
-				}
+				});
 			}
-		} catch (JAXBException e) {
-			e.printStackTrace();
 		}
 	}
 	
@@ -260,6 +297,21 @@ public class ApolloOpenDriveReader extends AbstractReader {
 		getDataSet().addPrimitive(way);
 		return way;
 	}
+	
+	/**
+	 * Sets the tags of an OpenDRIVE Road record to the specified relation.
+	 * @param roadRelation The relation for the tags to be added to.
+	 * @param id The ID used by OSM/JOSM to uniquely identify the relation.
+	 * @param uid The "id" attribute of the Road record.
+	 */
+	private void setRoadTags(Relation roadRelation, String id, String uid) {
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("id", id);
+		map.put("xodr:uid", uid);
+		map.put("xodr:element", "road");
+		roadRelation.setKeys(map);
+	}
+	
 	
 	/**
 	 * Sets the tags of an OpenDRIVE SubSignal record to the specified node.
@@ -318,6 +370,11 @@ public class ApolloOpenDriveReader extends AbstractReader {
 		way.setKeys(map);
 	}
 	
+	/**
+	 * Sets the tags of an OpenDRIVE Junction record to the specified way.
+	 * @param way
+	 * @param uid
+	 */
 	private void setJunctionWayTags(Way way, String uid) {
 		Map<String, String> map = new HashMap<String, String>();
 		map.put("uid", uid);
@@ -357,6 +414,33 @@ public class ApolloOpenDriveReader extends AbstractReader {
 		way.setKeys(map);
 	}
 	
+	/**
+	 * Sets the tags of an OpenDRIVE Lane record to the specified relation.
+	 * @param relation The relation for the tags to be added to.
+	 * @param id The ID used by OSM/JOSM to uniquely identify the relation.
+	 * @param uid "id" attribute of the Lane record.
+	 * @param type "type" attribute of the Lane record.
+	 */
+	private void setLaneRelationTags(Relation relation, String id, String uid, String type) {
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("xodr:id", id);
+		map.put("xodr:uid", uid);
+		map.put("xodr:type", type);
+		map.put("xodr:element", "lane");
+		relation.setKeys(map);
+	}
+	
+	/**
+	 * Sets the tags
+	 * @param way
+	 * @param uid
+	 * @param lane
+	 * @param order
+	 * @param type
+	 * @param singleSide
+	 * @param road
+	 * @param direction
+	 */
 	private void setWayTags(Way way, String uid, String lane, String order, String type, String singleSide, String road, String direction) {
 		Map<String, String> map = new HashMap<String, String>();
 		map.put("uid", uid);
@@ -373,16 +457,4 @@ public class ApolloOpenDriveReader extends AbstractReader {
 		System.out.println(type);
 		way.setKeys(map);
 	}
-	
-	
-	@Override
-	protected DataSet doParseDataSet(InputStream input, ProgressMonitor progressMonitor) throws IllegalDataException {
-		parse(input, progressMonitor);
-		return getDataSet();
-	}
-	
-	public static DataSet parseDataSet(InputStream input, ProgressMonitor progressMonitor) throws IllegalDataException {
-		return new ApolloOpenDriveReader().doParseDataSet(input, progressMonitor);
-	}
-
 }
