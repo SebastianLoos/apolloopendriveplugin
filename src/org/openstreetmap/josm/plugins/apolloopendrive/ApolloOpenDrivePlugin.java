@@ -15,8 +15,6 @@ public class ApolloOpenDrivePlugin extends Plugin{
 	public ApolloOpenDrivePlugin(PluginInformation info)
 	{
 		super(info);
-		System.out.println(info.version);
-		System.out.println("Test");
         this.apolloOpenDriveFileImporter = new ApolloOpenDriveFileImporter();
         this.apolloOpenDriveToOsmFileImporter = new ApolloOpenDriveToOsmFileImporter();
         this.apolloOpenDriveFileExporter = new ApolloOpenDriveFileExporter();
