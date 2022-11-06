@@ -7,7 +7,7 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="C:/Users/Hayuki/OneDrive/Masterarbeit/josm-tested.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Hayuki/Documents/apolloconverterlib-ex-0.1.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Hayuki/OneDrive/Masterarbeit/jaxb.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Hayuki/OneDrive/Masterarbeit/apolloconverterlib-0.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

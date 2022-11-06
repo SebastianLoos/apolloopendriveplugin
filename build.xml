@@ -23,7 +23,7 @@
     -->
     <property name="plugin.author" value="Sebastian Loos"/>
     <property name="plugin.class" value="org.openstreetmap.josm.plugins.apolloopendrive.ApolloOpenDrivePlugin"/>
-    <property name="plugin.description" value="Export data to the Apollo OpenDrive format"/>
+    <property name="plugin.description" value="Display and import Apollo OpenDRIVE data into OSM"/>
     <property name="plugin.icon" value="..."/>
     <property name="plugin.link" value="test"/>
     <!--<property name="plugin.early" value="..."/>-->
@@ -32,6 +32,7 @@
 
     <fileset id="plugin.requires.jars" dir="${plugin.dist.dir}">
         <include name="jaxb.jar"/>
+        <include name="apolloconverterlib-0.2.jar"/>
     </fileset>
 
     <!-- ** include targets that all plugins have in common ** -->

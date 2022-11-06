@@ -23,6 +23,15 @@ The .jar file of the plugin must be placed in the plugin folder of JOSM. On Wind
 ![pluginpath](img/josmpluginspath.png)
   
 After placing the plugin in the folder, JOSM is ready to be launched.  
+It is important to launch JOSM with the Java version 8. On Java version 9 or newer, the plugin will crash upon loading a file.  
+If your system has a different default Java version than version 8, launch the .jar file of JOSM via the command line to manually select the correct Java binary. The JOSM binary is located in the following folder:
+
+`%appdata%\..\Local\JOSM\app`
+
+Below is an example command to launch JOSM with a Java binary of version 1.8.0.211:  
+  
+`'C:\Program Files\Java\jdk1.8.0_211\bin\java.exe' -jar .\josm-custom.jar`  
+
 When it finishes loading, open the settings by clicking on the icon in the top menu:  
   
 ![josmsettingsicon](img/josmsettingsicon.png)  
@@ -30,3 +39,16 @@ When it finishes loading, open the settings by clicking on the icon in the top m
 In the screen that has now opened, select the "Plugins" tab and enable the "apolloopendrive" plugin in the list of plugins on the right.  
   
 ![josmsettings](img/josmsettings.png)
+
+## Using the plugin
+When the plugin is enabled click on the "Open file" icon in the top left.  
+  
+![openfile](img/openfilesymbol.png)  
+  
+You can now select "Apollo OpenDRIVE file" in the file type dropdown menu and open any Apollo OpenDRIVE file. Larger files may take a few minutes to import. A demo file containing a small area of road data can be found in the "demo" folder of the repository.  
+
+![openfilemenu](img/openfilemenu.png)
+
+After loading the file, the geometries contained in the Apollo OpenDRIVE file should be visible.
+
+![josm](img/josmfinished.png)  
