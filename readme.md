@@ -1,4 +1,4 @@
-#JOSM Apollo OpenDRIVE Plugin
+# JOSM Apollo OpenDRIVE Plugin
 This is a plugin for the JOSM editor for displaying and importing Apollo OpenDRIVE data.
 ## Compiling the source code
 This section can be skipped if you use a compiled binary from the release section.  
