@@ -1,5 +1,7 @@
 # JOSM Apollo OpenDRIVE Plugin
 This is a plugin for the JOSM editor for displaying and importing Apollo OpenDRIVE data.
+The conversion tool to create an Apollo OpenDRIVE file can be found [here](https://github.com/SebastianLoos/apolloopendriveconverter).
+[Apollo Auto](https://developer.apollo.auto/index.html) is an open source autonomous driving software platform developed by Baidu.
 ## Compiling the source code
 This section can be skipped if you use a compiled binary from the release section.  
 To compile the source code, the build script ("build.xml") contained within the repository can be used. The script requires the plugin environment from the [official repository](https://josm.openstreetmap.de/osmsvn/applications/editors/josm) and a compiled JOSM binary, which can either be downloaded from the [official website](https://josm.openstreetmap.de/) or compiled from the JOSM source code.  
@@ -44,11 +46,17 @@ In the screen that has now opened, select the "Plugins" tab and enable the "apol
 When the plugin is enabled click on the "Open file" icon in the top left.  
   
 ![openfile](img/openfilesymbol.png)  
-  
-You can now select "Apollo OpenDRIVE file" in the file type dropdown menu and open any Apollo OpenDRIVE file. Larger files may take a few minutes to import. A demo file containing a small area of road data can be found in the "demo" folder of the repository.  
+
+### Import Apollo OpenDRIVE data
+You can now select "Apollo OpenDRIVE file" in the file type dropdown menu and open any Apollo OpenDRIVE file. Larger files may take a few minutes to import. A demo file containing a small area of road data can be found in the [demo](demo/demo.xodr) folder of the repository.  
 
 ![openfilemenu](img/openfilemenu.png)
 
 After loading the file, the geometries contained in the Apollo OpenDRIVE file should be visible.
 
 ![josm](img/josmfinished.png)  
+
+### Export Apollo OpenDRIVE data
+This feature is no yet completed.
+
+A planned feature currently under development is the the export of loaded OSM (and other) data into the Apollo OpenDRIVE format using the [Apollo OpenDRIVE conversion tool](https://github.com/SebastianLoos/apolloopendriveconverter).

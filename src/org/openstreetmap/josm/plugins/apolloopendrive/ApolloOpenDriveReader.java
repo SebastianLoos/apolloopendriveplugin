@@ -392,10 +392,10 @@ public class ApolloOpenDriveReader extends AbstractReader {
 	 */
 	private void setObjectRelationTags(Relation relation, String id, String uid, String type, String subType) {
 		Map<String, String> map = new HashMap<String, String>();
-		map.put("id", id);
-		map.put("xodr:uid", uid);
-		map.put("xodr:type", type);
-		map.put("xodr:subtype", subType);
+		map.put("id", id != null ? id : "");
+		map.put("xodr:uid", uid != null ? uid : "");
+		map.put("xodr:type", type != null ? type : "");
+		map.put("xodr:subtype", subType != null ? subType : "");
 		map.put("xodr:element", "object");
 		relation.setKeys(map);
 	}
